@@ -7,6 +7,8 @@ const alunoRoutes = require('./routes/alunoRoutes');
 
 //inicializar o express
 const app = express();
+app.set('json spaces', 2);
+
 //habilitar o express para receber JSON
 app.use(express.json());
 //conectar no banco de dados
