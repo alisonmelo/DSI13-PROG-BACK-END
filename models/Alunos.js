@@ -6,11 +6,11 @@ const mongoose = require('mongoose');
 const alunoSchema = new mongoose.Schema({
     nome:{
         type: String,
-        require: true
+        required: true
     },
     curso:{
         type:String,
-        require:true
+        required:true
     },
     idade:{
         type: Number
