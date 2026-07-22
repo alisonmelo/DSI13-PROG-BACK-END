@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 //importar molde tabela aluno
 const Aluno = require('../models/Alunos');
+//importar authMiddleware
+const authMiddleware = require('../middleware/authMiddleware');
 
 //Metodo post cadastrar novo aluno
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware ,async (req, res) => {
     try {
         //Pega o JSON do que o usuario colocou no corpo da requisição
         const dadosDoAluno = req.body;
@@ -20,7 +22,7 @@ router.post('/', async (req, res) => {
     }
 
 });
-router.get('/', async (req, res) => {
+router.get('/',authMiddleware, async (req, res) => {
     try {
         const pagina = parseInt(req.query.pagina) || 1;
         const limite = parseInt(req.query.limite) || 5;

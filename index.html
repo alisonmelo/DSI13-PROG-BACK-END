@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel da API - Alunos</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        button { padding: 10px 15px; border: none; border-radius: 5px; background: #007bff; color: white; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        button:hover { background: #0056b3; }
+        .box { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        #tokenDisplay, #alunosDisplay { background: #282c34; color: #61dafb; padding: 10px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap; font-family: monospace; }
+        .sucesso { border-left: 5px solid #28a745; }
+        .erro { border-left: 5px solid #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>👨‍💻 Integração com a API</h1>
+    
+    <!-- SEÇÃO 1: LOGIN E GERAÇÃO DE TOKEN -->
+    <div class="box">
+        <h2>1. Autenticação (Gerar Token)</h2>
+        <p>Clique no botão para simular o login e receber o JWT.</p>
+        <button onclick="fazerLogin()">Gerar Token JWT</button>
+        <div id="tokenDisplay">Nenhum token gerado ainda...</div>
+    </div>
+
+    <!-- SEÇÃO 2: BUSCAR ALUNOS (ROTA PROTEGIDA) -->
+    <div class="box">
+        <h2>2. Buscar Alunos (Rota Protegida)</h2>
+        <p>A requisição enviará o token gerado no cabeçalho (Authorization).</p>
+        <button onclick="buscarAlunos()" style="background: #28a745;">Buscar Lista de Alunos</button>
+        <button onclick="limparToken()" style="background: #dc3545;">Apagar Token (Testar Erro)</button>
+        <div id="alunosDisplay">Os dados dos alunos aparecerão aqui...</div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'https://effective-space-waffle-x4x9w599693pxp-3000.app.github.dev';
+    let tokenSalvo = ''; // Variável para guardar o token na memória do navegador
+
+    // -------------------------------------------------------------
+    // FUNÇÃO 1: Fazer requisição para a rota que gera o token
+    // -------------------------------------------------------------
+    async function fazerLogin() {
+        try {
+            // Chama a rota de login-teste que criamos no server.js
+            const resposta = await fetch(`${API_URL}/login`, {
+                method: 'POST'
+            });
+
+            const dados = await resposta.json();
+
+            if (resposta.ok) {
+                tokenSalvo = dados.token; // Salva o token na variável
+                const display = document.getElementById('tokenDisplay');
+                display.innerText = `Token Recebido:\n${tokenSalvo}`;
+                display.className = "sucesso";
+            } else {
+                alert('Erro ao gerar o token!');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro de conexão. O servidor está rodando na porta 3000? Habilitou o CORS?');
+        }
+    }
+
+    // -------------------------------------------------------------
+    // FUNÇÃO 2: Buscar alunos enviando o token no cabeçalho
+    // -------------------------------------------------------------
+    async function buscarAlunos() {
+        const display = document.getElementById('alunosDisplay');
+        display.innerText = "Carregando...";
+
+        try {
+            const resposta = await fetch(`${API_URL}/alunos`, {
+                method: 'GET',
+                headers: {
+                    // É AQUI QUE A MÁGICA ACONTECE!
+                    // Injetamos o token JWT no formato padrão Bearer
+                    'Authorization': `Bearer ${tokenSalvo}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const dados = await resposta.json();
+
+            // Formata o JSON para ficar bonito na tela
+            display.innerText = JSON.stringify(dados, null, 2);
+
+            if (resposta.ok) {
+                display.className = "sucesso";
+            } else {
+                // Se der erro (ex: 401 Sem Token), cai aqui
+                display.className = "erro";
+            }
+
+        } catch (error) {
+            console.error(error);
+            display.innerText = "Erro ao buscar alunos. Verifique o console.";
+            display.className = "erro";
+        }
+    }
+
+    // -------------------------------------------------------------
+    // FUNÇÃO EXTRA: Apaga o token para simular acesso negado
+    // -------------------------------------------------------------
+    function limparToken() {
+        tokenSalvo = '';
+        document.getElementById('tokenDisplay').innerText = "Token apagado!";
+        document.getElementById('tokenDisplay').className = "erro";
+        alert("Token apagado. Tente buscar os alunos agora e veja o erro 401!");
+    }
+</script>
+
+</body>
+</html>
